@@ -1,0 +1,50 @@
+receivers:
+  # Receive metrics from the Exporter
+  otlp:
+    protocols:
+      grpc:
+        endpoint: "0.0.0.0:4317"
+      http:
+        endpoint: "0.0.0.0:4318"
+
+  # Collect internal telemetry data from the Collector itself
+  prometheus:
+    config:
+      scrape_configs:
+        - job_name: 'otel-collector-internal'
+          scrape_interval: 10s
+          static_configs:
+            - targets: ['0.0.0.0:8888']  # Internal telemetry endpoint
+
+processors:
+  batch:
+    timeout: 10s
+    send_batch_size: 1024
+  memory_limiter:
+    check_interval: 1s
+    limit_mib: 1024
+
+exporters:
+  influxdb:
+    endpoint: http://influxdb2:8086
+    org: docs
+    bucket: monitordb
+    token: r_bczypKNPShuEOiI4OR8MkpNy-xew4c11z8M9BluB2xIA01ABteiGXCbbr1YuDMCTM-xDixbycn6vT3QorXJw==
+    metrics_schema: telegraf-prometheus-v1
+    sending_queue:
+      enabled: true
+      num_consumers: 10
+      queue_size: 5000
+    retry_on_failure:
+      enabled: true
+      initial_interval: 5s
+      max_interval: 30s
+      max_elapsed_time: 300s
+
+service:
+  pipelines:
+    metrics:
+      receivers: [otlp, prometheus]
+      processors: [memory_limiter, batch]
+      exporters: [influxdb]
+

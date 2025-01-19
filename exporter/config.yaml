@@ -1,0 +1,40 @@
+receivers:
+  # Collect host metrics from the local system
+  hostmetrics:
+    collection_interval: 30s
+    scrapers:
+      cpu:
+      memory:
+      disk:
+      network:
+
+  # Collect internal telemetry data from the Exporter itself
+  prometheus:
+    config:
+      scrape_configs:
+        - job_name: 'otel-exporter-internal'
+          scrape_interval: 10s
+          static_configs:
+            - targets: ['0.0.0.0:8888']  # Internal telemetry endpoint
+
+processors:
+  batch:
+    timeout: 10s
+    send_batch_size: 512
+  memory_limiter:
+    check_interval: 1s
+    limit_mib: 512
+
+exporters:
+  otlp:
+    endpoint: "otel-collector:4317"  # Address of the Collector
+    tls:
+      insecure: true
+
+service:
+  pipelines:
+    metrics:
+      receivers: [hostmetrics, prometheus]
+      processors: [memory_limiter, batch]
+      exporters: [otlp]
+
