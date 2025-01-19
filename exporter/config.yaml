@@ -24,17 +24,80 @@ processors:
   memory_limiter:
     check_interval: 1s
     limit_mib: 512
+  routing:
+    from_attribute: metrics_type 
+    attribute_source: context
+    table:
+      - value: "prometheus"
+        exporters: [influxdb/prometheus]
+      - value: "default"
+        exporters: [influxdb/default]
+  resource:
+    attributes:
+      - action: insert
+        key: metrics_type
+        value: default 
+
+extensions:
+  health_check: 
+  pprof:
+  zpages:
 
 exporters:
-  otlp:
-    endpoint: "otel-collector:4317"  # Address of the Collector
-    tls:
-      insecure: true
+  # Default InfluxDB Exporter
+  influxdb/default:
+    endpoint: http://localhost:8086
+    org: docs
+    bucket: monitordb
+    token: r_bczypKNPShuEOiI4OR8MkpNy-xew4c11z8M9BluB2xIA01ABteiGXCbbr1YuDMCTM-xDixbycn6vT3QorXJw==
+    metrics_schema: telegraf-prometheus-v1
+    sending_queue:
+      enabled: true
+      num_consumers: 10
+      queue_size: 5000
+    retry_on_failure:
+      enabled: true
+      initial_interval: 5s
+      max_interval: 30s
+      max_elapsed_time: 300s
+
+  # InfluxDB Exporter for Prometheus Metrics
+  influxdb/prometheus:
+    endpoint: http://localhost:8086
+    org: docs
+    bucket: otel-exporter
+    token: r_bczypKNPShuEOiI4OR8MkpNy-xew4c11z8M9BluB2xIA01ABteiGXCbbr1YuDMCTM-xDixbycn6vT3QorXJw==
+    metrics_schema: telegraf-prometheus-v1
+    sending_queue:
+      enabled: true
+      num_consumers: 10
+      queue_size: 5000
+    retry_on_failure:
+      enabled: true
+      initial_interval: 5s
+      max_interval: 30s
+      max_elapsed_time: 300s
 
 service:
   pipelines:
-    metrics:
-      receivers: [hostmetrics, prometheus]
+    metrics/host:
+      receivers: [hostmetrics]
       processors: [memory_limiter, batch]
-      exporters: [otlp]
+      exporters: [influxdb/default]
+
+    # Prometheus Metrics Pipeline
+    metrics/prometheus:
+      receivers: [prometheus]
+      processors: [memory_limiter, batch]
+      exporters: [influxdb/prometheus]
+  telemetry:
+    metrics:
+      level: detailed
+      readers:
+        - pull:
+            exporter:
+              prometheus:
+                host: '0.0.0.0'
+                port: 8888
+
 
