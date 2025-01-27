@@ -7,14 +7,14 @@ receivers:
       http:
         endpoint: "0.0.0.0:4318"
 
-#  # Collect internal telemetry data from the Collector itself
-#  prometheus:
-#    config:
-#      scrape_configs:
-#        - job_name: 'otel-collector-internal'
-#          scrape_interval: 10s
-#          static_configs:
-#            - targets: ['0.0.0.0:8888']  # Internal telemetry endpoint
+  # Collect internal telemetry data from the Collector itself
+  prometheus:
+    config:
+      scrape_configs:
+        - job_name: 'otel-collector-internal'
+          scrape_interval: 10s
+          static_configs:
+            - targets: ['0.0.0.0:8888']  # Internal telemetry endpoint
 
 extensions:
   health_check:
@@ -28,20 +28,6 @@ extensions:
     endpoint: "0.0.0.0:55679"
 
 processors:
-  resource:
-    attributes:
-      - key: telemetry_type
-        value: internal
-        action: insert
-        conditions:
-          - resource.attributes["service.name"] == "otelcontribcol"
-  routing:
-    from_attribute: telemetry_type
-    table:
-      - value: internal
-        exporter: influxdb
-      - value: "*"
-        exporter: kafka
   batch:
     timeout: 10s
     send_batch_size: 1024
@@ -50,14 +36,10 @@ processors:
     limit_mib: 1024
 
 exporters:
-  kafka:
-    brokers: ["kafka:9092"] # Replace with your Kafka brokers
-    topic: "iTelemetry"    # Replace with the desired Kafka topic
-    encoding: otlp_json        # Use the appropriate encoding (e.g., otlp_proto, otlp_json, etc.)
   influxdb:
     endpoint: http://influxdb2:8086
     org: docs
-    bucket: otel-exporter
+    bucket: monitordb
     token: 1clX8gJMWU9hlVZy4QcKFRAxN9_Y-W_X1HquXdMFRtKHPAKq3pHolHKwOuMv0qYNg8V5o36QeG6zMInsWfMZoA==
     metrics_schema: telegraf-prometheus-v1
     sending_queue:
@@ -74,6 +56,7 @@ service:
   extensions: [zpages, health_check]
   pipelines:
     metrics:
-      receivers: [otlp]
+      receivers: [otlp, prometheus]
       processors: [memory_limiter, batch]
-      exporters: [kafka, influxdb]
+      exporters: [influxdb]
+

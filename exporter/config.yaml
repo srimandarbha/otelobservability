@@ -46,10 +46,10 @@ extensions:
 exporters:
   # Default InfluxDB Exporter
   influxdb/default:
-    endpoint: http://localhost:8086
+    endpoint: http://influxdb2:8086
     org: docs
     bucket: monitordb
-    token: r_bczypKNPShuEOiI4OR8MkpNy-xew4c11z8M9BluB2xIA01ABteiGXCbbr1YuDMCTM-xDixbycn6vT3QorXJw==
+    token: 1clX8gJMWU9hlVZy4QcKFRAxN9_Y-W_X1HquXdMFRtKHPAKq3pHolHKwOuMv0qYNg8V5o36QeG6zMInsWfMZoA== 
     metrics_schema: telegraf-prometheus-v1
     sending_queue:
       enabled: true
@@ -63,10 +63,10 @@ exporters:
 
   # InfluxDB Exporter for Prometheus Metrics
   influxdb/prometheus:
-    endpoint: http://localhost:8086
+    endpoint: http://influxdb2:8086
     org: docs
     bucket: otel-exporter
-    token: r_bczypKNPShuEOiI4OR8MkpNy-xew4c11z8M9BluB2xIA01ABteiGXCbbr1YuDMCTM-xDixbycn6vT3QorXJw==
+    token: 1clX8gJMWU9hlVZy4QcKFRAxN9_Y-W_X1HquXdMFRtKHPAKq3pHolHKwOuMv0qYNg8V5o36QeG6zMInsWfMZoA== 
     metrics_schema: telegraf-prometheus-v1
     sending_queue:
       enabled: true
