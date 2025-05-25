@@ -1,0 +1,15 @@
+# use stats or Guage
+
+from(bucket: "comphealth")
+  |> range(start: -28d)
+  |> filter(fn: (r) =>
+    r._measurement == "grafana_health" and
+    r._field == "status" and r.host == "main"
+  )
+  |> aggregateWindow(every: 5m, fn: mean, createEmpty: false)
+  |> mean()
+  |> map(fn: (r) => ({
+    r with
+    _value: r._value * 100.0,
+    _field: "SLA"
+  }))
