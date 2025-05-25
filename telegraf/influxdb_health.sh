@@ -12,7 +12,7 @@ fi
 cat <<EOF
 [
   {
-    "measurement": "influx_health_check",
+    "measurement": "influxdb_health",
     "tags": {
       "service": "influxdb"
     },
